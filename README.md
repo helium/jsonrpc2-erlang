@@ -3,15 +3,23 @@ JSON-RPC 2.0 for Erlang
 
 Transport agnostic library for JSON-RPC 2.0 servers and clients.
 
-This page contains the manual for the server part, the `jsonrpc2` module. The client part has a
-separate module `jsonrpc2_client`. Client docs are yet to be written. For documentation on the
-client library, see the source code: [jsonrpc2_client.erl](src/jsonrpc2_client.erl).
+This is a fork of the [upstream](https://github.com/zuiderkwast/jsonrpc2-erlang) library. 
+
+It was forked to modernize the underlying assumptions about JSON for Erlang,
+especially the now pervasive use of maps to represent JSON data as the internal
+Erlang data structure.
+
+(In the bad old days before maps were introduced in OTP 17, there were several different
+mostly compatible proplist-ish ways of representing JSON data internally in Erlang -
+the so-called [EEP18](https://www.erlang.org/eeps/eep-0018.html) format. Thankfully 
+the introduction of maps has mostly eliminated these representations.)
 
 Features
 --------
 
-* can use any JSON encoder and decoder that supports the eep0018 style terms
-  format,
+* EEP18 format still supported for drop-in replacement in existing code
+* can use any JSON encoder and decoder that supports maps as the internal
+  Erlang data structure format,
 * transport neutral
 * dispatches parsed requests to a simple callback function
 * supports an optional callback "map" function for batch requests, e.g. to
@@ -46,7 +54,7 @@ Types
 -----
 
 ```Erlang
-json() :: true | false | null | binary() | [json()] | {[{binary(), json()}]}.
+json() :: true | false | null | binary() | [json()] | {[{binary(), json()}]} | map().
 
 handlerfun() :: fun((method(), params()) -> json()).
 method() :: binary().
@@ -151,22 +159,13 @@ my_handler(_SomeOtherMethod, _) ->
 Compatible JSON parsers
 -----------------------
 
-* Jiffy, https://github.com/davisp/jiffy
-* erlang-json, https://github.com/hio/erlang-json
-* Mochijson2 using ```mochijson2:decode(Bin, [{format, eep18}])```
-* Probably more...
-
-Links
------
-
-* The JSON-RPC 2.0 specification, http://www.jsonrpc.org/specification
-* rjsonrpc2, a "restricted" implementation of JSON-RPC 2.0, https://github.com/imprest/rjsonrpc2
-* ejrpc2, another JSON-RPC 2 library, https://github.com/jvliwanag/ejrpc2
+Any JSON encoder that returns maps
 
 License
 -------
 
 ```
+Copyright 2021 Helium Systems Inc
 Copyright 2013-2014 Viktor Söderqvist
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -181,15 +180,3 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ```
-
-**Author's note:**
-The Apache 2.0 is a very permissive license just like MIT and BSD, but as
-FSF notes, it includes "certain patent termination and indemnification
-provisions", which is a good thing. We (the authours) cannot come to you
-(the users) to claim any patents we might have on something in the code.
-
-If you have any compatibility issues with this license, keep in mind that if
-you're using this as an external dependency (e.g. with Rebar or Erlang.mk)
-you're not actually distributing this dependency anyway. Even if you do
-distribute dependencies, they are not actually linked together until they
-are loaded and run in the BEAM unless you compile the release with HiPE.
